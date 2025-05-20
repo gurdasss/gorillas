@@ -2,6 +2,7 @@
 #include "Random.h"
 #include <raylib.h>
 #include <forward_list>
+#include <iostream>
 
 void initBuildings(std::forward_list<Rectangle2D> &buildings);
 
@@ -40,27 +41,53 @@ int main()
 void initBuildings(std::forward_list<Rectangle2D> &buildings)
 {
 
-    constexpr int maxBuildingW{50};
-    [[maybe_unused]] constexpr int minBuildingW{20};
+    constexpr int maxBuildingW{80};
+    constexpr int minBuildingW{50};
 
-    for (auto i{0}; i < GetScreenWidth() / maxBuildingW; ++i)
+    int remainingScreenW{GetScreenWidth()};
+
+    while (remainingScreenW > 0)
     {
-        const int maxScreenH{GetScreenHeight() / 2};
-        const int minScreenH{maxScreenH / 2};
+        int randomBuildingW{};
 
-        Rectangle2D building{maxBuildingW,
+        if (remainingScreenW >= maxBuildingW)
+        {
+            // consider full predefined random range
+            randomBuildingW = Random::get(minBuildingW, maxBuildingW);
+            remainingScreenW -= randomBuildingW;
+        }
+        // fit the building to the left edge of the screen
+        else if ((remainingScreenW < maxBuildingW &&
+                  remainingScreenW > minBuildingW) ||
+                 remainingScreenW <= minBuildingW)
+        {
+            randomBuildingW = remainingScreenW;
+
+            // we've finally covered the whole screen width
+            remainingScreenW = 0;
+        }
+
+        std::cout << "Remaining screen width: " << remainingScreenW << '\n';
+
+        const int maxScreenH{GetScreenHeight() / 2};
+        const int minScreenH{maxScreenH / 4};
+
+        Rectangle2D building{static_cast<float>(randomBuildingW),
                              static_cast<float>(
                                  Random::get(minScreenH, maxScreenH))};
 
-        constexpr unsigned int minAlpha{70u};
+        constexpr unsigned int minAlpha{125u};
         constexpr unsigned int maxAlpha{255u};
 
+        // randomly set the alpha value of base building color
         building.setTint(Color{230, 41, 55,
                                static_cast<unsigned char>(
                                    Random::get(minAlpha, maxAlpha))});
 
         building.setPosition(Vector2{
-            static_cast<float>(maxBuildingW * i),
+            // place the newly created building to
+            // the leftmost x-axis of the screen
+            static_cast<float>(remainingScreenW),
             static_cast<float>(GetScreenHeight()) - building.getHeight(),
         });
 
