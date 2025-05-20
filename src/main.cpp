@@ -39,9 +39,31 @@ int main()
 
 void initBuildings(std::forward_list<Rectangle2D> &buildings)
 {
-    const float maxScreenH{static_cast<float>(GetScreenHeight()) / 2.0f};
-    const float minScreenH{maxScreenH / 2.0f};
 
-    constexpr float maxBuildingW{50.0f};
-    constexpr float minBuildingW{20.0f};
+    constexpr int maxBuildingW{50};
+    [[maybe_unused]] constexpr int minBuildingW{20};
+
+    for (auto i{0}; i < GetScreenWidth() / maxBuildingW; ++i)
+    {
+        const int maxScreenH{GetScreenHeight() / 2};
+        const int minScreenH{maxScreenH / 2};
+
+        Rectangle2D building{maxBuildingW,
+                             static_cast<float>(
+                                 Random::get(minScreenH, maxScreenH))};
+
+        constexpr unsigned int minAlpha{70u};
+        constexpr unsigned int maxAlpha{255u};
+
+        building.setTint(Color{230, 41, 55,
+                               static_cast<unsigned char>(
+                                   Random::get(minAlpha, maxAlpha))});
+
+        building.setPosition(Vector2{
+            static_cast<float>(maxBuildingW * i),
+            static_cast<float>(GetScreenHeight()) - building.getHeight(),
+        });
+
+        buildings.push_front(building);
+    }
 }
