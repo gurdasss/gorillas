@@ -1,10 +1,14 @@
 #include "Rectangle2D.h"
 #include "Random.h"
 #include <raylib.h>
-#include <forward_list>
+#include <forward_list> // for std::forward_list
 #include <iostream>
+#include <cassert> // for assert
 
 void initBuildings(std::forward_list<Rectangle2D> &buildings);
+void placeGorillaOnBuilding(const std::forward_list<Rectangle2D> &buildings,
+                            Rectangle2D &gorilla,
+                            float minScreenW, float maxScreenW);
 
 int main()
 {
@@ -20,6 +24,14 @@ int main()
 
     initBuildings(buildings);
 
+    constexpr float gorillaW{50};
+    constexpr float gorillaH{50};
+
+    Rectangle2D lGorilla{gorillaW, gorillaH};
+    lGorilla.setTint(BLUE);
+
+    placeGorillaOnBuilding(buildings, lGorilla, screenW - 200, screenW);
+
     while (!WindowShouldClose())
     {
         BeginDrawing();
@@ -27,6 +39,8 @@ int main()
 
         for (const Rectangle2D &building : buildings)
             DrawRectangleRec(building.getRectangle(), building.getTint());
+
+        DrawRectangleRec(lGorilla.getRectangle(), lGorilla.getTint());
 
         DrawFPS(0, 0);
 
@@ -41,14 +55,14 @@ int main()
 void initBuildings(std::forward_list<Rectangle2D> &buildings)
 {
 
-    constexpr int maxBuildingW{80};
-    constexpr int minBuildingW{50};
-
     int remainingScreenW{GetScreenWidth()};
 
     while (remainingScreenW > 0)
     {
         int randomBuildingW{};
+
+        constexpr int maxBuildingW{80};
+        constexpr int minBuildingW{50};
 
         if (remainingScreenW >= maxBuildingW)
         {
@@ -80,7 +94,7 @@ void initBuildings(std::forward_list<Rectangle2D> &buildings)
         constexpr unsigned int maxAlpha{255u};
 
         // randomly set the alpha value of base building color
-        building.setTint(Color{230, 41, 55,
+        building.setTint(Color{130, 130, 130,
                                static_cast<unsigned char>(
                                    Random::get(minAlpha, maxAlpha))});
 
@@ -92,5 +106,43 @@ void initBuildings(std::forward_list<Rectangle2D> &buildings)
         });
 
         buildings.push_front(building);
+    }
+}
+
+void placeGorillaOnBuilding(const std::forward_list<Rectangle2D> &buildings,
+                            Rectangle2D &gorilla,
+                            float minScreenW, float maxScreenW)
+{
+    assert((!buildings.empty()) && "There are'nt any buildings.");
+    assert(minScreenW < maxScreenW && "Make sure min screen width"
+                                      " > max screen width");
+
+    float currentX{minScreenW};
+
+    auto building{buildings.cbegin()};
+
+    while (currentX < maxScreenW)
+    {
+
+        if (building == buildings.cend())
+            assert(false && "was'nt able to place that gorilla");
+
+        float buildingFullWidth{building->getX() + building->getWidth()};
+
+        // check if the current building's x and width sum falls within
+        // the min and max screen width
+        if (buildingFullWidth >= minScreenW && buildingFullWidth <= maxScreenW)
+        {
+            if (building->getWidth() >= gorilla.getWidth())
+            {
+                // place the given gorilla on this given building
+                gorilla.setX(building->getX());
+                gorilla.setY(building->getY() - gorilla.getHeight());
+                return;
+            }
+        }
+
+        currentX += building->getX();
+        ++building;
     }
 }
