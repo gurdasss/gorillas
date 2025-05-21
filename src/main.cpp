@@ -24,13 +24,23 @@ int main()
 
     initBuildings(buildings);
 
+    // make sure the gorilla's width should be <= min building width
     constexpr float gorillaW{50};
-    constexpr float gorillaH{50};
+    constexpr float gorillaH{gorillaW};
 
     Rectangle2D lGorilla{gorillaW, gorillaH};
     lGorilla.setTint(BLUE);
 
-    placeGorillaOnBuilding(buildings, lGorilla, screenW - 200, screenW);
+    // place the left gorilla on left side of the screen
+    placeGorillaOnBuilding(buildings, lGorilla, 0, screenW / 4);
+
+    Rectangle2D rGorilla{gorillaW, gorillaH};
+    rGorilla.setTint(RED);
+
+    // place the left gorilla on right side of the screen
+    placeGorillaOnBuilding(buildings, rGorilla,
+                           screenW - screenW / 4,
+                           screenW);
 
     while (!WindowShouldClose())
     {
@@ -41,6 +51,7 @@ int main()
             DrawRectangleRec(building.getRectangle(), building.getTint());
 
         DrawRectangleRec(lGorilla.getRectangle(), lGorilla.getTint());
+        DrawRectangleRec(rGorilla.getRectangle(), rGorilla.getTint());
 
         DrawFPS(0, 0);
 
@@ -81,8 +92,6 @@ void initBuildings(std::forward_list<Rectangle2D> &buildings)
             remainingScreenW = 0;
         }
 
-        std::cout << "Remaining screen width: " << remainingScreenW << '\n';
-
         const int maxScreenH{GetScreenHeight() / 2};
         const int minScreenH{maxScreenH / 4};
 
@@ -115,23 +124,20 @@ void placeGorillaOnBuilding(const std::forward_list<Rectangle2D> &buildings,
 {
     assert((!buildings.empty()) && "There are'nt any buildings.");
     assert(minScreenW < maxScreenW && "Make sure min screen width"
-                                      " > max screen width");
-
-    float currentX{minScreenW};
+                                      " < max screen width");
 
     auto building{buildings.cbegin()};
 
-    while (currentX < maxScreenW)
+    // iterate over the whole list of buildings
+    while (building != buildings.cend())
     {
 
-        if (building == buildings.cend())
-            assert(false && "was'nt able to place that gorilla");
+        float buildingWidthPosition{building->getX() + building->getWidth()};
 
-        float buildingFullWidth{building->getX() + building->getWidth()};
-
-        // check if the current building's x and width sum falls within
+        // check if the current building's x + width falls within
         // the min and max screen width
-        if (buildingFullWidth >= minScreenW && buildingFullWidth <= maxScreenW)
+        if (buildingWidthPosition >= minScreenW &&
+            buildingWidthPosition <= maxScreenW)
         {
             if (building->getWidth() >= gorilla.getWidth())
             {
@@ -142,7 +148,6 @@ void placeGorillaOnBuilding(const std::forward_list<Rectangle2D> &buildings,
             }
         }
 
-        currentX += building->getX();
         ++building;
     }
 }
